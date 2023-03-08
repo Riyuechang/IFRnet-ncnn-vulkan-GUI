@@ -38,15 +38,15 @@
             this.ScaleRatio = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.Speed = new System.Windows.Forms.ComboBox();
-            this.Output_mode = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             this.Output_video_mode = new System.Windows.Forms.ComboBox();
-            this.Ai_mode = new System.Windows.Forms.Label();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.Ai_mode = new System.Windows.Forms.ComboBox();
             this.settings = new System.Windows.Forms.Button();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.checkBox2 = new System.Windows.Forms.CheckBox();
+            this.TTA = new System.Windows.Forms.CheckBox();
+            this.UHD = new System.Windows.Forms.CheckBox();
             this.Start = new System.Windows.Forms.Button();
-            this.Fps_input = new System.Windows.Forms.TextBox();
+            this.Input_fps = new System.Windows.Forms.TextBox();
             this.Output_fps = new System.Windows.Forms.TextBox();
             this.log = new System.Windows.Forms.TextBox();
             this.Time_left = new System.Windows.Forms.TextBox();
@@ -176,16 +176,16 @@
             this.Speed.Size = new System.Drawing.Size(130, 29);
             this.Speed.TabIndex = 11;
             // 
-            // Output_mode
+            // label5
             // 
-            this.Output_mode.AutoSize = true;
-            this.Output_mode.Font = new System.Drawing.Font("微軟正黑體", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.Output_mode.ForeColor = System.Drawing.SystemColors.Control;
-            this.Output_mode.Location = new System.Drawing.Point(12, 114);
-            this.Output_mode.Name = "Output_mode";
-            this.Output_mode.Size = new System.Drawing.Size(151, 26);
-            this.Output_mode.TabIndex = 12;
-            this.Output_mode.Text = "Output Mode";
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("微軟正黑體", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.label5.ForeColor = System.Drawing.SystemColors.Control;
+            this.label5.Location = new System.Drawing.Point(12, 114);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(151, 26);
+            this.label5.TabIndex = 12;
+            this.label5.Text = "Output Mode";
             // 
             // Output_video_mode
             // 
@@ -203,33 +203,33 @@
             this.Output_video_mode.Size = new System.Drawing.Size(80, 29);
             this.Output_video_mode.TabIndex = 13;
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("微軟正黑體", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.label6.ForeColor = System.Drawing.SystemColors.Control;
+            this.label6.Location = new System.Drawing.Point(325, 114);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(99, 26);
+            this.label6.TabIndex = 14;
+            this.label6.Text = "Ai Mode";
+            // 
             // Ai_mode
             // 
-            this.Ai_mode.AutoSize = true;
-            this.Ai_mode.Font = new System.Drawing.Font("微軟正黑體", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.Ai_mode.ForeColor = System.Drawing.SystemColors.Control;
-            this.Ai_mode.Location = new System.Drawing.Point(325, 114);
-            this.Ai_mode.Name = "Ai_mode";
-            this.Ai_mode.Size = new System.Drawing.Size(99, 26);
-            this.Ai_mode.TabIndex = 14;
-            this.Ai_mode.Text = "Ai Mode";
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox1.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
+            this.Ai_mode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.Ai_mode.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.Ai_mode.FormattingEnabled = true;
+            this.Ai_mode.Items.AddRange(new object[] {
             "IFRNet_GoPro",
             "IFRNet_S_GoPro",
             "IFRNet_L_GoPro",
             "IFRNet_Vimeo90K",
             "IFRNet_S_Vimeo90K",
             "IFRNet_L_Vimeo90K"});
-            this.comboBox1.Location = new System.Drawing.Point(430, 114);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(180, 29);
-            this.comboBox1.TabIndex = 15;
+            this.Ai_mode.Location = new System.Drawing.Point(430, 114);
+            this.Ai_mode.Name = "Ai_mode";
+            this.Ai_mode.Size = new System.Drawing.Size(180, 29);
+            this.Ai_mode.TabIndex = 15;
             // 
             // settings
             // 
@@ -241,29 +241,29 @@
             this.settings.Text = "settings";
             this.settings.UseVisualStyleBackColor = true;
             // 
-            // checkBox1
+            // TTA
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.checkBox1.ForeColor = System.Drawing.SystemColors.Control;
-            this.checkBox1.Location = new System.Drawing.Point(723, 114);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(49, 20);
-            this.checkBox1.TabIndex = 17;
-            this.checkBox1.Text = "TTA";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.TTA.AutoSize = true;
+            this.TTA.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.TTA.ForeColor = System.Drawing.SystemColors.Control;
+            this.TTA.Location = new System.Drawing.Point(723, 114);
+            this.TTA.Name = "TTA";
+            this.TTA.Size = new System.Drawing.Size(49, 20);
+            this.TTA.TabIndex = 17;
+            this.TTA.Text = "TTA";
+            this.TTA.UseVisualStyleBackColor = true;
             // 
-            // checkBox2
+            // UHD
             // 
-            this.checkBox2.AutoSize = true;
-            this.checkBox2.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.checkBox2.ForeColor = System.Drawing.SystemColors.Control;
-            this.checkBox2.Location = new System.Drawing.Point(664, 114);
-            this.checkBox2.Name = "checkBox2";
-            this.checkBox2.Size = new System.Drawing.Size(53, 20);
-            this.checkBox2.TabIndex = 18;
-            this.checkBox2.Text = "UHD";
-            this.checkBox2.UseVisualStyleBackColor = true;
+            this.UHD.AutoSize = true;
+            this.UHD.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.UHD.ForeColor = System.Drawing.SystemColors.Control;
+            this.UHD.Location = new System.Drawing.Point(664, 114);
+            this.UHD.Name = "UHD";
+            this.UHD.Size = new System.Drawing.Size(53, 20);
+            this.UHD.TabIndex = 18;
+            this.UHD.Text = "UHD";
+            this.UHD.UseVisualStyleBackColor = true;
             // 
             // Start
             // 
@@ -276,16 +276,16 @@
             this.Start.UseVisualStyleBackColor = true;
             this.Start.Click += new System.EventHandler(this.Start_Click);
             // 
-            // Fps_input
+            // Input_fps
             // 
-            this.Fps_input.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.Fps_input.Location = new System.Drawing.Point(170, 79);
-            this.Fps_input.Name = "Fps_input";
-            this.Fps_input.ReadOnly = true;
-            this.Fps_input.Size = new System.Drawing.Size(80, 29);
-            this.Fps_input.TabIndex = 20;
-            this.Fps_input.Text = "0";
-            this.Fps_input.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.Input_fps.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.Input_fps.Location = new System.Drawing.Point(170, 79);
+            this.Input_fps.Name = "Input_fps";
+            this.Input_fps.ReadOnly = true;
+            this.Input_fps.Size = new System.Drawing.Size(80, 29);
+            this.Input_fps.TabIndex = 20;
+            this.Input_fps.Text = "0";
+            this.Input_fps.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // Output_fps
             // 
@@ -339,15 +339,15 @@
             this.Controls.Add(this.Time_left);
             this.Controls.Add(this.log);
             this.Controls.Add(this.Output_fps);
-            this.Controls.Add(this.Fps_input);
+            this.Controls.Add(this.Input_fps);
             this.Controls.Add(this.Start);
-            this.Controls.Add(this.checkBox2);
-            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.UHD);
+            this.Controls.Add(this.TTA);
             this.Controls.Add(this.settings);
-            this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.Ai_mode);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.Output_video_mode);
-            this.Controls.Add(this.Output_mode);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.Speed);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.ScaleRatio);
@@ -378,15 +378,15 @@
         private System.Windows.Forms.ComboBox ScaleRatio;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox Speed;
-        private System.Windows.Forms.Label Output_mode;
+        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ComboBox Output_video_mode;
-        private System.Windows.Forms.Label Ai_mode;
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox Ai_mode;
         private System.Windows.Forms.Button settings;
-        private System.Windows.Forms.CheckBox checkBox1;
-        private System.Windows.Forms.CheckBox checkBox2;
+        private System.Windows.Forms.CheckBox TTA;
+        private System.Windows.Forms.CheckBox UHD;
         private System.Windows.Forms.Button Start;
-        private System.Windows.Forms.TextBox Fps_input;
+        private System.Windows.Forms.TextBox Input_fps;
         private System.Windows.Forms.TextBox Output_fps;
         private System.Windows.Forms.TextBox log;
         private System.Windows.Forms.TextBox Time_left;
