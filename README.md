@@ -1,2 +1,2 @@
-# GUI
-various GIU
+# IFRnet-ncnn-vulkan-GUI
+各種GIU
