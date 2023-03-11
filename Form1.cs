@@ -518,8 +518,8 @@ namespace IFRnet
         {
             CommonOpenFileDialog path = new CommonOpenFileDialog();
             path.IsFolderPicker = true;
-            path.ShowDialog();
-            Output_video.Text = path.FileName;
+            if (path.ShowDialog() == CommonFileDialogResult.Ok)
+                Output_video.Text = path.FileName;
         }
     }
 }
