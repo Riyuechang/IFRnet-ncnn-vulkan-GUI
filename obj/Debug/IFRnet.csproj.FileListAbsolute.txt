@@ -9,3 +9,8 @@ D:\VS專案\IFRnet\IFRnet\obj\Debug\IFRnet.csproj.GenerateResource.cache
 D:\VS專案\IFRnet\IFRnet\obj\Debug\IFRnet.csproj.CoreCompileInputs.cache
 D:\VS專案\IFRnet\IFRnet\obj\Debug\IFRnet.exe
 D:\VS專案\IFRnet\IFRnet\obj\Debug\IFRnet.pdb
+D:\VS專案\IFRnet\IFRnet\bin\Debug\Microsoft.WindowsAPICodePack.dll
+D:\VS專案\IFRnet\IFRnet\bin\Debug\Microsoft.WindowsAPICodePack.Shell.dll
+D:\VS專案\IFRnet\IFRnet\bin\Debug\Microsoft.WindowsAPICodePack.xml
+D:\VS專案\IFRnet\IFRnet\bin\Debug\Microsoft.WindowsAPICodePack.Shell.xml
+D:\VS專案\IFRnet\IFRnet\obj\Debug\IFRnet.csproj.CopyComplete
