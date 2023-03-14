@@ -36,7 +36,7 @@
             this.Browse_input = new System.Windows.Forms.Button();
             this.Browse_output = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
-            this.ScaleRatio = new System.Windows.Forms.ComboBox();
+            this.Scale_ratio = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.Speed = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -58,6 +58,8 @@
             this.Audio_switch = new System.Windows.Forms.CheckBox();
             this.label8 = new System.Windows.Forms.Label();
             this.GPU_level = new System.Windows.Forms.NumericUpDown();
+            this.label9 = new System.Windows.Forms.Label();
+            this.Mix_to = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.GPU_level)).BeginInit();
             this.SuspendLayout();
             // 
@@ -79,6 +81,7 @@
             this.Input_video.Name = "Input_video";
             this.Input_video.Size = new System.Drawing.Size(634, 29);
             this.Input_video.TabIndex = 1;
+            this.Input_video.TextChanged += new System.EventHandler(this.Input_video_TextChanged);
             // 
             // label2
             // 
@@ -132,12 +135,12 @@
             this.label3.TabIndex = 6;
             this.label3.Text = "Output FPS";
             // 
-            // ScaleRatio
+            // Scale_ratio
             // 
-            this.ScaleRatio.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ScaleRatio.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.ScaleRatio.FormattingEnabled = true;
-            this.ScaleRatio.Items.AddRange(new object[] {
+            this.Scale_ratio.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.Scale_ratio.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.Scale_ratio.FormattingEnabled = true;
+            this.Scale_ratio.Items.AddRange(new object[] {
             "2",
             "2.5",
             "3",
@@ -149,10 +152,11 @@
             "8",
             "9",
             "10"});
-            this.ScaleRatio.Location = new System.Drawing.Point(285, 79);
-            this.ScaleRatio.Name = "ScaleRatio";
-            this.ScaleRatio.Size = new System.Drawing.Size(50, 29);
-            this.ScaleRatio.TabIndex = 8;
+            this.Scale_ratio.Location = new System.Drawing.Point(285, 79);
+            this.Scale_ratio.Name = "Scale_ratio";
+            this.Scale_ratio.Size = new System.Drawing.Size(50, 29);
+            this.Scale_ratio.TabIndex = 8;
+            this.Scale_ratio.SelectedIndexChanged += new System.EventHandler(this.Scale_ratio_SelectedIndexChanged);
             // 
             // label4
             // 
@@ -185,6 +189,7 @@
             this.Speed.Name = "Speed";
             this.Speed.Size = new System.Drawing.Size(135, 29);
             this.Speed.TabIndex = 11;
+            this.Speed.SelectedIndexChanged += new System.EventHandler(this.Speed_SelectedIndexChanged);
             // 
             // label5
             // 
@@ -230,18 +235,22 @@
             this.Ai_mode.Items.AddRange(new object[] {
             "IFRNet_GoPro",
             "IFRNet_S_GoPro",
-            "IFRNet_L_GoPro"});
+            "IFRNet_L_GoPro",
+            "IFRNet_Vimeo90K",
+            "IFRNet_S_Vimeo90K",
+            "IFRNet_L_Vimeo90K"});
             this.Ai_mode.Location = new System.Drawing.Point(429, 114);
             this.Ai_mode.Name = "Ai_mode";
             this.Ai_mode.Size = new System.Drawing.Size(180, 29);
             this.Ai_mode.TabIndex = 15;
+            this.Ai_mode.SelectionChangeCommitted += new System.EventHandler(this.Ai_mode_SelectionChangeCommitted);
             // 
             // TTA
             // 
             this.TTA.AutoSize = true;
             this.TTA.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.TTA.ForeColor = System.Drawing.SystemColors.Control;
-            this.TTA.Location = new System.Drawing.Point(615, 120);
+            this.TTA.Location = new System.Drawing.Point(518, 149);
             this.TTA.Name = "TTA";
             this.TTA.Size = new System.Drawing.Size(49, 20);
             this.TTA.TabIndex = 17;
@@ -253,7 +262,7 @@
             this.UHD.AutoSize = true;
             this.UHD.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.UHD.ForeColor = System.Drawing.SystemColors.Control;
-            this.UHD.Location = new System.Drawing.Point(672, 120);
+            this.UHD.Location = new System.Drawing.Point(573, 149);
             this.UHD.Name = "UHD";
             this.UHD.Size = new System.Drawing.Size(53, 20);
             this.UHD.TabIndex = 18;
@@ -379,7 +388,7 @@
             this.label8.AutoSize = true;
             this.label8.Font = new System.Drawing.Font("微軟正黑體", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.label8.ForeColor = System.Drawing.SystemColors.Control;
-            this.label8.Location = new System.Drawing.Point(602, 82);
+            this.label8.Location = new System.Drawing.Point(615, 117);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(109, 26);
             this.label8.TabIndex = 30;
@@ -388,7 +397,7 @@
             // GPU_level
             // 
             this.GPU_level.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.GPU_level.Location = new System.Drawing.Point(717, 79);
+            this.GPU_level.Location = new System.Drawing.Point(730, 114);
             this.GPU_level.Maximum = new decimal(new int[] {
             20,
             0,
@@ -401,7 +410,7 @@
             0});
             this.GPU_level.Name = "GPU_level";
             this.GPU_level.ReadOnly = true;
-            this.GPU_level.Size = new System.Drawing.Size(55, 29);
+            this.GPU_level.Size = new System.Drawing.Size(42, 29);
             this.GPU_level.TabIndex = 31;
             this.GPU_level.TabStop = false;
             this.GPU_level.Value = new decimal(new int[] {
@@ -410,12 +419,41 @@
             0,
             0});
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Font = new System.Drawing.Font("微軟正黑體", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.label9.ForeColor = System.Drawing.SystemColors.Control;
+            this.label9.Location = new System.Drawing.Point(602, 82);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(76, 26);
+            this.label9.TabIndex = 32;
+            this.label9.Text = "mix to";
+            // 
+            // Mix_to
+            // 
+            this.Mix_to.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.Mix_to.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.Mix_to.FormattingEnabled = true;
+            this.Mix_to.Items.AddRange(new object[] {
+            "None",
+            "24FPS",
+            "30FPS",
+            "60FPS"});
+            this.Mix_to.Location = new System.Drawing.Point(684, 79);
+            this.Mix_to.Name = "Mix_to";
+            this.Mix_to.Size = new System.Drawing.Size(88, 29);
+            this.Mix_to.TabIndex = 33;
+            this.Mix_to.SelectedIndexChanged += new System.EventHandler(this.Mix_to_SelectedIndexChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.ClientSize = new System.Drawing.Size(784, 296);
+            this.Controls.Add(this.Mix_to);
+            this.Controls.Add(this.label9);
             this.Controls.Add(this.GPU_level);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.Audio_switch);
@@ -436,7 +474,7 @@
             this.Controls.Add(this.label5);
             this.Controls.Add(this.Speed);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.ScaleRatio);
+            this.Controls.Add(this.Scale_ratio);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.Browse_output);
             this.Controls.Add(this.Browse_input);
@@ -446,6 +484,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "IFRnet";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.GPU_level)).EndInit();
             this.ResumeLayout(false);
@@ -462,7 +501,7 @@
         private System.Windows.Forms.Button Browse_input;
         private System.Windows.Forms.Button Browse_output;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.ComboBox ScaleRatio;
+        private System.Windows.Forms.ComboBox Scale_ratio;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox Speed;
         private System.Windows.Forms.Label label5;
@@ -484,6 +523,8 @@
         private System.Windows.Forms.CheckBox Audio_switch;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.NumericUpDown GPU_level;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.ComboBox Mix_to;
     }
 }
 

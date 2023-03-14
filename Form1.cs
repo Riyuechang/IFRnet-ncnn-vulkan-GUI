@@ -21,11 +21,27 @@ namespace IFRnet
         const string ffmpeg = "\\IFRnet\\ffmpeg\\bin\\ffmpeg.exe";//ffmpeg路徑
         const string ifrnet = "\\IFRnet\\ifrnet-ncnn-vulkan.exe";
         const string _cache = "\\IFRnet\\_cache\\";//暫存1路徑
-        const string _cache2 = "\\IFRnet\\_cache\\_cache\\";//暫存2路徑
+        const string _cache2 = "\\IFRnet\\_cache\\_cache1\\";//暫存2路徑
+        const string _cache3 = "\\IFRnet\\_cache\\_cache2\\";//暫存3路徑
+        const string _cache4 = "\\IFRnet\\_cache\\_cache3\\";//暫存4路徑
+        string[] cache = {_cache,_cache2,_cache3,_cache4 };
 
         float frame = 0;//幀數
         float nowFrame = 0;//及時幀數
         float pngNum = 0;//目標幀數
+        bool state = false;//開始狀態
+        string stageState = "";//階段狀態
+        int ifrnetStage = 1;//補幀階段
+        int frequency = 1;//補幀次數
+        int stateTime = 0;//開始時間
+        int stageTime = 0;//補幀開始時間
+        float Fps = 0;//FPS
+        float frameRate = 0;//幀率
+        float videoTime = 0;//影片時間
+        float finalFps = 0;//最終幀率
+        int fpsRatio = 1;//FPS倍率
+        int mixTo = 0;//混幀
+        string aiModeState = "GoPro";//紀錄Ai_mode狀態
 
         public Form1()
         {
@@ -35,65 +51,16 @@ namespace IFRnet
         private void Form1_Load(object sender, EventArgs e)
         {
             timer.Start();
-            ScaleRatio.SelectedIndex = 0;
+            Scale_ratio.SelectedIndex = 0;
             Speed.SelectedIndex = 0;
             Output_video_mode.SelectedIndex = 0;
             Ai_mode.SelectedIndex = 0;
+            Mix_to.SelectedIndex = 0;
         }
-
-        bool state = false;//開始狀態
-        string stageState = "";//補幀狀態
-        int stateTime = 0;//開始時間
-        int stageTime = 0;//補幀開始時間
-        float Fps = 0;//FPS
-        float frameRate = 0;//幀率
-        string change = "";//變化
-        string change2 = "";//變化2
-        string change3 = "";//變化3
+        
         private void timer_Tick(object sender, EventArgs e)
         {
             string path = System.Environment.CurrentDirectory;//獲得當前路徑
-            string inputVideoText = Input_video.Text;//儲存各項參數
-            string inputFpsText = Input_fps.Text;
-            string scaleRatioText = ScaleRatio.Text;
-
-            if (change != inputVideoText)//判斷影片輸入是否有變化,有變化就更新影片幀率
-            {
-                Process process = new Process();
-
-                //讀取影片幀率
-                Process FFprobe_frame_rate = new Process();
-
-                FFprobe_frame_rate.StartInfo.UseShellExecute = false;
-                FFprobe_frame_rate.StartInfo.RedirectStandardOutput = true;//啟用錯誤輸出
-                FFprobe_frame_rate.StartInfo.CreateNoWindow = true;//不顯示視窗
-
-                FFprobe_frame_rate.StartInfo.FileName = path + ffprobe;//設定ffprobe路徑
-                FFprobe_frame_rate.StartInfo.Arguments = "-v quiet -select_streams v:0 -show_entries stream=r_frame_rate -of csv=p=0 " + "\"" + inputVideoText + "\"";//設定讀取參數
-
-                FFprobe_frame_rate.OutputDataReceived += (s, a) =>//讀取錯誤輸出
-                {
-                    if (a.Data != null)//判斷回傳值是否回空
-                    {
-                        frameRate = float.Parse(a.Data.Substring(0, a.Data.IndexOf("/"))) / float.Parse(a.Data.Substring(a.Data.IndexOf("/") + 1, a.Data.Length - a.Data.IndexOf("/") - 1));//將回傳值轉換成幀率,並儲存在frameRate
-                    }
-                };
-
-                FFprobe_frame_rate.Start();//啟動
-                FFprobe_frame_rate.BeginOutputReadLine();//將ffprobe.exe重新導向到錯誤輸出流
-                FFprobe_frame_rate.WaitForExit();//等待ffprobe.exe結束
-                FFprobe_frame_rate.Close();//關閉
-
-                Input_fps.Text = frameRate.ToString();//輸出幀率到Input_fps.Text
-                change = inputVideoText;//更新change
-            }
-
-            if (change2 != inputFpsText || change3 != scaleRatioText)//檢測輸入幀率或補幀倍率是否發生變化
-            {
-                Output_fps.Text = (float.Parse(inputFpsText) * float.Parse(scaleRatioText)).ToString();//更新輸出幀率
-                change2 = inputFpsText;//更新變化2為新的值
-                change3 = scaleRatioText;//更新變化3為新的值
-            }
 
             if (state == true)//檢測是否開始
             {
@@ -116,21 +83,21 @@ namespace IFRnet
                     Planned_speed.Text = stageState + a.ToString("0.00") + "%";//同步輸出進度到Planned_speed.Text
                     break;
                 case "IFRnet:":
-                    numTotal = pngNum;
-                    num = (float)Directory.GetFiles(path + _cache2).Length;//暫存2 png數
-                    Planned_speed.Text = stageState + ((Directory.GetFiles(path + _cache2).Length / pngNum) * 100).ToString("0.00") + "%";//輸出百分比到Planned_speed.Text
+                    numTotal = pngNum / (float)Math.Pow(2, frequency - ifrnetStage);
+                    num = (float)Directory.GetFiles(path + cache[ifrnetStage]).Length;//暫存2 png數
+                    Planned_speed.Text = "IFRnet_" + ifrnetStage + ":" + ((Directory.GetFiles(path + cache[ifrnetStage]).Length / (pngNum / Math.Pow(2, frequency - ifrnetStage))) * 100).ToString("0.00") + "%";//輸出百分比到Planned_speed.Text
+                    break;
+                case "audio:":
+                    numTotal = videoTime * fpsRatio;
+                    num = nowFrame * frameRate;//將及時幀數寫進num
+                    float c = (nowFrame / (videoTime * fpsRatio)) * 100;//分離出時間,並轉換成百分比
+                    Planned_speed.Text = stageState + c.ToString("0.00") + "%";//同步輸出進度到Planned_speed.Text
                     break;
                 case "Out video:":
                     numTotal = pngNum;
                     num = nowFrame;//將及時幀數寫進num
                     float b = (nowFrame / pngNum) * 100;//分離出幀數,並轉換成百分比
                     Planned_speed.Text = stageState + b.ToString("0.00") + "%";//同步輸出進度到Planned_speed.Text
-                    break;
-                case "audio:":
-                    numTotal = pngNum;
-                    num = nowFrame;//將及時幀數寫進num
-                    float c = (nowFrame / pngNum) * 100;//分離出幀數,並轉換成百分比
-                    Planned_speed.Text = stageState + c.ToString("0.00") + "%";//同步輸出進度到Planned_speed.Text
                     break;
                 default:
                     Planned_speed.Text = stageState;
@@ -146,10 +113,7 @@ namespace IFRnet
             if (numTotal != 0 && num != 0)//剩餘時間
             {
                 int timeLeft = (int)((numTotal - num) / Fps);//計算剩餘時間
-                int timeLeftS = timeLeft % 60;//分離出秒
-                int timeLeftM = timeLeft % 3600 / 60;//分離出分
-                int timeLeftH = timeLeft / 3600;//分離出小時
-                Time_left.Text = timeLeftH + ":" + timeLeftM.ToString().PadLeft(2, '0') + ":" + timeLeftS.ToString().PadLeft(2, '0');//輸出剩餘時間
+                Time_left.Text = TimeSpan.FromSeconds(timeLeft).ToString(@"hh\:mm\:ss");//輸出剩餘時間
             }
         }
 
@@ -158,11 +122,13 @@ namespace IFRnet
             string path = System.Environment.CurrentDirectory;//獲得當前路徑
             string inputVideoText = Input_video.Text;//儲存各項參數
             string outputVideoText = Output_video.Text;
-            string scaleRatioText = ScaleRatio.Text;
+            string scaleRatioText = Scale_ratio.Text;
             string speedText = Speed.Text;
-            string outputFpsText = Output_fps.Text;
             string outputVideoModeText = Output_video_mode.Text;
             string aiModeText = Ai_mode.Text;
+            string mixToText = Mix_to.Text;
+            float finalFpsSetValue = finalFps;
+            int fpsRatioSetValue = fpsRatio;
             string videoName = inputVideoText.Substring(inputVideoText.LastIndexOf("\\") + 1, inputVideoText.LastIndexOf(".") - inputVideoText.LastIndexOf("\\") - 1);//儲存影片名稱
             if (outputVideoText.LastIndexOf("\\") + 1 != outputVideoText.Length)//檢查outputVideoText最後一個字元是否為"\",不是就補上"\"
                 outputVideoText += "\\";
@@ -176,7 +142,9 @@ namespace IFRnet
                 Directory.Delete(path + _cache, true);//清除_cache資料夾和裡面所有的東西
 
             //建立暫存資料夾
-            Directory.CreateDirectory(path + _cache2);//創建_cache和裡面的子資料夾_cache
+            Directory.CreateDirectory(path + _cache2);//創建_cache和裡面的子資料夾_cache1
+            Directory.CreateDirectory(path + _cache3);//創建_cache和裡面的子資料夾_cache2
+            Directory.CreateDirectory(path + _cache4);//創建_cache和裡面的子資料夾_cache3
 
             async Task IFRnet_Start()
             {
@@ -239,9 +207,9 @@ namespace IFRnet
 
                 //當補幀倍率為2.5或7.5,並且暫存1 png數量是單數,將暫存1 png數量+1
                 int fileNum = Directory.GetFiles(path + _cache).Length;//讀取暫存1 png的數量到fileNum
-                ScaleRatio.Invoke((Action)(() =>
+                Scale_ratio.Invoke((Action)(() =>
                 {
-                    if (ScaleRatio.Text == "2.5" || ScaleRatio.Text == "7.5")//補幀倍率是否為2.5或7.5
+                    if (Scale_ratio.Text == "2.5" || Scale_ratio.Text == "7.5")//補幀倍率是否為2.5或7.5
                     {
                         if (fileNum % 2 == 1)//如果png的數量為單數
                         {
@@ -251,7 +219,7 @@ namespace IFRnet
                     }
                 }));
 
-                ScaleRatio.Invoke((Action)(() => pngNum =fileNum * float.Parse(ScaleRatio.Text)));//目前幀數*補幀倍率=目標幀數
+                Scale_ratio.Invoke((Action)(() => pngNum =fileNum * float.Parse(Scale_ratio.Text)));//目前幀數*補幀倍率=目標幀數
 
                 //開始補幀
                 stageState = "IFRnet:";//設定階段狀態
@@ -268,86 +236,65 @@ namespace IFRnet
                 if (UHD.Checked)//設定UHD
                     uhd = " -u";
 
-                //開始補幀
-                Process IFRnet = new Process();
-
-                IFRnet.StartInfo.UseShellExecute = false;
-                IFRnet.StartInfo.CreateNoWindow = true;//不顯示視窗
-
-                IFRnet.StartInfo.FileName = path + ifrnet;//設定ifrnet-ncnn-vulkan.exe路徑
-                IFRnet.StartInfo.Arguments = "-m " + aiModeText + " -n " + pngNum + gpuLevel + tta + uhd +" -i " + path + _cache + " -o " + path + _cache2;//設定輸入輸出參數
-                log.Invoke((Action)(() => log.Text += "\r\n-m " + aiModeText + " -n " + pngNum + gpuLevel + tta + uhd + " -i " + path + _cache + " -o " + path + _cache2));
-                IFRnet.Start();//啟動
-                while (Directory.GetFiles(path + _cache2).Length != pngNum) //檢測暫存2 png數是否等於目標幀數
+                //檢測模型類型
+                frequency = 1;//補幀次數
+                string numFrame = "";//目標幀數參數
+                if (aiModeText.Contains("Vimeo90K"))//如果是使用Vimeo90K模型就不使用-n參數
                 {
-                    log.Invoke((Action)(() => log.Text += "\r\nframe=" + Directory.GetFiles(path + _cache2).Length + "/" + pngNum));//輸出當前幀數到log.Text
-                    Thread.Sleep(500);
+                    numFrame = "";
+                    frequency = (int)Math.Log(int.Parse(scaleRatioText),2);
                 }
+                else
+                    numFrame = " -n " + pngNum;
 
-                //補幀結束直接輸出最終數值
-                log.Invoke((Action)(() => log.Text += "\r\nframe=" + pngNum));
-                Planned_speed.Invoke((Action)(() => Planned_speed.Text = "IFRnet:100%"));
+                //開始補幀
+                for (ifrnetStage = 1; ifrnetStage <= frequency; ifrnetStage++)
+                {
+                    Process IFRnet = new Process();
 
-                IFRnet.WaitForExit();//等待ifrnet-ncnn-vulkan.exe結束
-                IFRnet.Close();//關閉
+                    IFRnet.StartInfo.UseShellExecute = false;
+                    IFRnet.StartInfo.CreateNoWindow = true;//不顯示視窗
+
+                    IFRnet.StartInfo.FileName = path + ifrnet;//設定ifrnet-ncnn-vulkan.exe路徑
+                    IFRnet.StartInfo.Arguments = "-m " + aiModeText + numFrame + gpuLevel + tta + uhd + " -i " + path + cache[ifrnetStage - 1] + " -o " + path + cache[ifrnetStage];//設定輸入輸出參數
+                    IFRnet.Start();//啟動
+
+                    while (Directory.GetFiles(path + cache[ifrnetStage]).Length != pngNum / Math.Pow(2, frequency - ifrnetStage)) //檢測暫存ifrnetStage png數是否等於目標幀數
+                    {
+                        log.Invoke((Action)(() => log.Text += "\r\nframe=" + Directory.GetFiles(path + cache[ifrnetStage]).Length + "/" + pngNum / Math.Pow(2, frequency - ifrnetStage)));//輸出當前幀數到log.Text
+                        Thread.Sleep(1000);
+                    }
+
+                    IFRnet.WaitForExit();//等待ifrnet-ncnn-vulkan.exe結束
+                    IFRnet.Close();//關閉
+                }
 
                 //紀錄補幀時間和FPS
                 int ifrnetResultTime = (Environment.TickCount - stageTime) / 1000;//拿掉毫秒
                 string ifrnetResultFps = FPS.Text;
 
-                //輸出幀率放慢倍率
-                int fpsRatio = 0;//FPS倍率
-                switch (speedText)//判斷Output_fps.Text內的倍率
-                {
-                    case "Normal Speed":
-                        fpsRatio = 1;
-                        break;
-                    case "x2 Slowmo":
-                        fpsRatio = 2;
-                        break;
-                    case "x3 Slowmo":
-                        fpsRatio = 3;
-                        break;
-                    case "x4 Slowmo":
-                        fpsRatio = 4;
-                        break;
-                    case "x5 Slowmo":
-                        fpsRatio = 5;
-                        break;
-                    case "x6 Slowmo":
-                        fpsRatio = 6;
-                        break;
-                    case "x7 Slowmo":
-                        fpsRatio = 7;
-                        break;
-                    case "x8 Slowmo":
-                        fpsRatio = 8;
-                        break;
-                    case "x9 Slowmo":
-                        fpsRatio = 9;
-                        break;
-                    case "x10 Slowmo":
-                        fpsRatio = 10;
-                        break;
-                }
-                float finalFps = float.Parse(outputFpsText) / fpsRatio;//最終幀率
+                //給影片增加混合幀率
+                string mixToName = "";
+                if (mixToText != "None")
+                    mixToName = "MixTo_" + mixTo + "fps_";
 
                 //給影片增加編號
                 string videoNum = "";//輸出檔案編號
-                if (File.Exists(outputVideoText + videoName + "_x" + scaleRatioText + "_" + finalFps + "fps_" + aiModeText + "." + outputVideoModeText) == true)//檢測輸出資料夾是否存在同名檔案
+                if (File.Exists(outputVideoText + videoName + "_x" + scaleRatioText + "_" + finalFpsSetValue + "fps_" + mixToName + aiModeText + "." + outputVideoModeText) == true)//檢測輸出資料夾是否存在同名檔案
                 {
                     for (int i = 1; ; i++)//循環檢測其他編號
                     {
-                        if (File.Exists(outputVideoText + videoName + "_x" + scaleRatioText + "_" + finalFps + "fps_" + aiModeText + "_" + i + "." + outputVideoModeText) != true)//檢測是否有其他編號
+                        if (File.Exists(outputVideoText + videoName + "_x" + scaleRatioText + "_" + finalFpsSetValue + "fps_" + mixToName + aiModeText + "_" + i + "." + outputVideoModeText) != true)//檢測是否有其他編號
                         {
                             videoNum = "_" + i;//設定檔案編號
                             break;//跳出迴圈
                         }
                     }
                 }
-                string videoNameOut = videoName + "_x" + scaleRatioText + "_" + finalFps + "fps_" + aiModeText + videoNum + "." + outputVideoModeText;
 
-                //檢測並設定影片格式
+                string videoNameOut = videoName + "_x" + scaleRatioText + "_" + finalFpsSetValue + "fps_" + mixToName + aiModeText + videoNum + "." + outputVideoModeText;//設定影片輸出名
+
+                //檢測並設定音訊格式
                 string audio = "";
                 switch (outputVideoModeText)
                 {
@@ -362,12 +309,17 @@ namespace IFRnet
                         break;
                 }
 
-                //從影片分離音訊檔
-                string outputPath = "";
+                //開始處理聲音放慢倍率
+                stageState = "audio:";//設定階段狀態
+                stageTime = Environment.TickCount;//紀錄轉換時間
+                nowFrame = 0;
+
+                //處理音訊
                 string audioParameter = "";//音訊參數
                 bool checkAudio = false;
                 if (Audio_switch.Checked)//檢測是否啟用音訊
                 {
+                    //從影片分離音訊檔
                     Process FFmpeg_audio = new Process();
 
                     FFmpeg_audio.StartInfo.UseShellExecute = false;
@@ -388,14 +340,64 @@ namespace IFRnet
                     FFmpeg_audio.Close();//關閉
 
                     checkAudio = File.Exists(path + _cache + "audio" + audio);//檢查音訊檔
-                    if (checkAudio == true)//檢測是否分離出音訊檔
-                        audioParameter = " -i \"" + path + _cache + "audio" + audio + "\" -c:a copy";//設定音訊參數
+                    if (checkAudio)//檢測是否分離出音訊檔
+                    {
+                        string audioName = "";
+                        if (speedText == "Normal Speed")
+                            audioName = "audio";//設定音訊檔名
+                        else
+                        {
+                            //設定放慢倍率參數
+                            string audioRatio = " -filter:a \"atempo = 0.5";
+
+                            //處理聲音放慢倍率
+                            float numA = (float)Math.Log(fpsRatioSetValue, 2);//將FPS倍率取log2
+                            int numB = (int)numA;//取整數
+                            float numC = numA % 1;//取小數
+
+                            for (; numB > 1; numB--)
+                                audioRatio += ",atempo=0.5";
+
+                            audioRatio += ",atempo=" + Math.Pow(0.5, numC) + "\" ";
+
+                            //用ffmpeg處理聲音倍率
+                            Process FFmpeg_process_audio = new Process();
+
+                            FFmpeg_process_audio.StartInfo.UseShellExecute = false;
+                            FFmpeg_process_audio.StartInfo.RedirectStandardError = true;//啟用錯誤輸出
+                            FFmpeg_process_audio.StartInfo.CreateNoWindow = true;//不顯示視窗
+
+                            FFmpeg_process_audio.StartInfo.FileName = path + ffmpeg;//設定ffmpeg路徑
+                            FFmpeg_process_audio.StartInfo.Arguments = " -i \"" + path + _cache + "audio" + audio + "\"" + audioRatio + "\"" + path + _cache + "audio_2" + audio + "\"";//設定輸入輸出參數
+
+                            FFmpeg_process_audio.ErrorDataReceived += (s, a) =>//讀取錯誤輸出
+                            {
+                                log.Invoke((Action)(() => log.Text += "\r\n" + a.Data));//同步讀取ffmpeg.exe回傳值,並輸出到log.Text
+                                if (a.Data != null)//判斷回傳值是否回空
+                                {
+                                    if (a.Data.Contains("time="))//回傳值是否有"time="
+                                    {
+                                        nowFrame = (float)TimeSpan.Parse(a.Data.Substring(a.Data.IndexOf("time=") + 5, a.Data.IndexOf(".") - a.Data.IndexOf("time=") - 5)).TotalSeconds;
+                                    }
+                                }
+                            };
+
+                            FFmpeg_process_audio.Start();//啟動
+                            FFmpeg_process_audio.BeginErrorReadLine();//將ffmpeg.exe重新導向到錯誤輸出流
+                            FFmpeg_process_audio.WaitForExit();//等待ffmpeg.exe結束
+                            FFmpeg_process_audio.Close();//關閉
+
+                            audioName = "audio_2";//設定音訊檔名
+                        }
+
+                        audioParameter = " -i \"" + path + _cache + audioName + audio + "\" -c:a copy";//設定音訊參數
+                    }
                 }
 
-                if (Audio_switch.Checked && checkAudio && speedText != "Normal Speed")//如果音訊啟用且有音訊且放慢倍率不是Normal Speed,就把檔案輸出路徑改到暫存1
-                    outputPath = path + _cache;
-                else
-                    outputPath = outputVideoText;
+                //處理混幀
+                string mixFrame = "";
+                if(mixToText != "None")
+                    mixFrame = " -r " + mixTo;
 
                 //開始將png轉影片
                 stageState = "Out video:";//設定階段狀態
@@ -410,7 +412,7 @@ namespace IFRnet
                 FFmpeg_video.StartInfo.CreateNoWindow = true;//不顯示視窗
 
                 FFmpeg_video.StartInfo.FileName = path + ffmpeg;//設定ffmpeg路徑
-                FFmpeg_video.StartInfo.Arguments = " -framerate " + finalFps + " -i \"" + path + _cache2 + "/%08d.png\"" + audioParameter + " -crf 20 -c:v libx264 -pix_fmt yuv420p " + "\"" + outputPath + videoNameOut + "\"";//設定輸入輸出參數
+                FFmpeg_video.StartInfo.Arguments = "-framerate " + finalFpsSetValue + " -i \"" + path + cache[frequency] + "/%08d.png\"" + audioParameter + mixFrame + " -crf 20 -c:v libx264 -pix_fmt yuv420p " + "\"" + outputVideoText + videoNameOut + "\"";//設定輸入輸出參數
 
                 FFmpeg_video.ErrorDataReceived += (s, a) =>//讀取錯誤輸出
                 {
@@ -429,62 +431,12 @@ namespace IFRnet
                 FFmpeg_video.WaitForExit();//等待ffmpeg.exe結束
                 FFmpeg_video.Close();//關閉
 
-                //開始處理聲音放慢倍率
-                stageState = "audio:";//設定階段狀態
-                stageTime = Environment.TickCount;//紀錄轉換時間
-                nowFrame = 0;
-
-                //設定放慢倍率參數
-                string audioRatio = " -filter:a \"atempo = 0.5";
-                if (Audio_switch.Checked && checkAudio && speedText != "Normal Speed")//檢測是否有和啟用音訊
-                {
-                    //處理聲音放慢倍率
-                    float numA = (float)Math.Log(fpsRatio,2);//將FPS倍率取log2
-                    int numB = (int)numA;//取整數
-                    float numC = numA % 1;//取小數
-
-                    for (; numB > 1; numB--)
-                        audioRatio += ",atempo=0.5";
-
-                    audioRatio += ",atempo=" + Math.Pow(0.5,numC) + "\" ";
-
-                    //用ffmpeg處理聲音倍率
-                    Process FFmpeg_process_audio = new Process();
-
-                    FFmpeg_process_audio.StartInfo.UseShellExecute = false;
-                    FFmpeg_process_audio.StartInfo.RedirectStandardError = true;//啟用錯誤輸出
-                    FFmpeg_process_audio.StartInfo.CreateNoWindow = true;//不顯示視窗
-
-                    FFmpeg_process_audio.StartInfo.FileName = path + ffmpeg;//設定ffmpeg路徑
-                    FFmpeg_process_audio.StartInfo.Arguments = " -i \"" + path + _cache + videoNameOut + "\"" + audioRatio + "\"" + outputVideoText + videoNameOut + "\"";//設定輸入輸出參數
-
-                    FFmpeg_process_audio.ErrorDataReceived += (s, a) =>//讀取錯誤輸出
-                    {
-                        log.Invoke((Action)(() => log.Text += "\r\n" + a.Data));//同步讀取ffmpeg.exe回傳值,並輸出到log.Text
-                        if (a.Data != null)//判斷回傳值是否回空
-                        {
-                            if (a.Data.Substring(0, 6) == "frame=")//前6位回傳值是否等於"frame="
-                            {
-                                nowFrame = float.Parse(a.Data.Substring(6, a.Data.IndexOf("fps=") - 7));
-                            }
-                        }
-                    };
-
-                    FFmpeg_process_audio.Start();//啟動
-                    FFmpeg_process_audio.BeginErrorReadLine();//將ffmpeg.exe重新導向到錯誤輸出流
-                    FFmpeg_process_audio.WaitForExit();//等待ffmpeg.exe結束
-                    FFmpeg_process_audio.Close();//關閉
-                }
-
                 //停止計時
                 state = false;
                 stageState = "";
 
                 //輸出補幀資訊
-                int ifrnetTimeS = ifrnetResultTime % 60;//分離出秒
-                int ifrnetTimeM = ifrnetResultTime % 3600 / 60;//分離出分
-                int ifrnetTimeH = ifrnetResultTime / 3600;//分離出小時
-                log.Invoke((Action)(() => log.Text += "\r\n\r\n\r\nIFRnet result:" + ifrnetTimeH + ":" + ifrnetTimeM.ToString().PadLeft(2, '0') + ":" + ifrnetTimeS.ToString().PadLeft(2, '0') + "    " + ifrnetResultFps));//輸出結果
+                log.Invoke((Action)(() => log.Text += "\r\n\r\n\r\nIFRnet result:" + TimeSpan.FromSeconds(ifrnetResultTime).ToString(@"hh\:mm\:ss") + "    " + ifrnetResultFps));//輸出結果
 
                 //清空暫存
                 Directory.Delete(path + _cache, true);//清除_cache資料夾和裡面所有的東西
@@ -520,6 +472,200 @@ namespace IFRnet
             path.IsFolderPicker = true;
             if (path.ShowDialog() == CommonFileDialogResult.Ok)
                 Output_video.Text = path.FileName;
+        }
+
+        private void Ai_mode_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            string aiModeText = Ai_mode.Text;
+
+            string[] scaleRatio = new string[] { "4", "8" };//Vimeo90K的選項
+            string[] scaleRatio2 = new string[] { "2.5", "3", "4", "5", "6", "7", "7.5", "8", "9", "10" };//GoPro的選項
+
+            if (aiModeText.Contains("Vimeo90K"))//選擇的模型是Vimeo90K
+            {
+                if (aiModeState != "Vimeo90K")//上次不是選擇Vimeo90K模型
+                {
+                    Scale_ratio.SelectedIndex = 0;//設定Scale_ratio成第一個選項
+
+                    for (int i = 1; i <= 10; i++)//清除除了2以外的選項
+                        Scale_ratio.Items.RemoveAt(1);
+
+                    Scale_ratio.Items.AddRange(scaleRatio);
+
+                    aiModeState = "Vimeo90K";//更改狀態為Vimeo90K
+                }
+            }
+            else//是GoPro
+            {
+                if (aiModeState != "GoPro")//上次不是選擇GoPro模型
+                {
+                    Scale_ratio.SelectedIndex = 0;//設定Scale_ratio成第一個選項
+
+                    for (int i = 1; i <= 2; i++)//清除除了2以外的選項
+                        Scale_ratio.Items.RemoveAt(1);
+
+                    Scale_ratio.Items.AddRange(scaleRatio2);
+
+                    aiModeState = "GoPro";//更改狀態為GoPro
+                }
+            }
+        }
+
+        private void setOutputText()
+        {
+            Output_fps.Text = (float.Parse(Input_fps.Text) * float.Parse(Scale_ratio.Text)).ToString();//更新輸出幀率
+        }
+
+        private void setFinalFps()
+        {
+            finalFps = float.Parse(Output_fps.Text) / fpsRatio;//設定最終幀率
+        }
+
+        private void setMixTo()
+        {
+            //檢測最終幀率是否小於等於混幀
+            if (Mix_to.Text != "None" && finalFps == mixTo && finalFps != 0)
+            {
+                Mix_to.SelectedIndex = 0;
+                MessageBox.Show("The output frame rate cannot be equal to \"mix to\"");
+            }
+        }
+
+        private void Input_video_TextChanged(object sender, EventArgs e)//影片輸入發生變化時
+        {
+            string path = System.Environment.CurrentDirectory;//獲得當前路徑
+
+            Process process = new Process();
+
+            //讀取影片幀率
+            Process FFprobe_frame_rate = new Process();
+
+            FFprobe_frame_rate.StartInfo.UseShellExecute = false;
+            FFprobe_frame_rate.StartInfo.RedirectStandardOutput = true;//啟用錯誤輸出
+            FFprobe_frame_rate.StartInfo.CreateNoWindow = true;//不顯示視窗
+
+            FFprobe_frame_rate.StartInfo.FileName = path + ffprobe;//設定ffprobe路徑
+            FFprobe_frame_rate.StartInfo.Arguments = "-v quiet -select_streams v:0 -show_entries stream=r_frame_rate -of csv=p=0 " + "\"" + Input_video.Text + "\"";//設定讀取參數
+
+            FFprobe_frame_rate.OutputDataReceived += (s, a) =>//讀取錯誤輸出
+            {
+                if (a.Data != null)//判斷回傳值是否回空
+                {
+                    frameRate = float.Parse(a.Data.Substring(0, a.Data.IndexOf("/"))) / float.Parse(a.Data.Substring(a.Data.IndexOf("/") + 1, a.Data.Length - a.Data.IndexOf("/") - 1));//將回傳值轉換成幀率,並儲存在frameRate
+                }
+            };
+
+            FFprobe_frame_rate.Start();//啟動
+            FFprobe_frame_rate.BeginOutputReadLine();//將ffprobe.exe重新導向到錯誤輸出流
+            FFprobe_frame_rate.WaitForExit();//等待ffprobe.exe結束
+            FFprobe_frame_rate.Close();//關閉
+
+            //讀取影片時間
+            Process FFprobe_frame_time = new Process();
+
+            FFprobe_frame_time.StartInfo.UseShellExecute = false;
+            FFprobe_frame_time.StartInfo.RedirectStandardOutput = true;//啟用錯誤輸出
+            FFprobe_frame_time.StartInfo.CreateNoWindow = true;//不顯示視窗
+
+            FFprobe_frame_time.StartInfo.FileName = path + ffprobe;//設定ffprobe路徑
+            FFprobe_frame_time.StartInfo.Arguments = "-v quiet -select_streams v:0 -show_entries format=duration -of csv=p=0 " + "\"" + Input_video.Text + "\"";//設定讀取參數
+
+            FFprobe_frame_time.OutputDataReceived += (s, a) =>//讀取錯誤輸出
+            {
+                if (a.Data != null)//判斷回傳值是否回空
+                {
+                    videoTime = float.Parse(a.Data);//將回傳值儲存在videoTime
+                }
+            };
+
+            FFprobe_frame_time.Start();//啟動
+            FFprobe_frame_time.BeginOutputReadLine();//將ffprobe.exe重新導向到錯誤輸出流
+            FFprobe_frame_time.WaitForExit();//等待ffprobe.exe結束
+            FFprobe_frame_time.Close();//關閉
+
+            Input_fps.Text = frameRate.ToString();//輸出幀率到Input_fps.Text
+            setOutputText();//更新輸出幀率
+            setFinalFps();//設定最終幀率
+            setMixTo();//檢測最終幀率是否小於等於混幀
+        }
+
+        private void Scale_ratio_SelectedIndexChanged(object sender, EventArgs e)//幀率發生變化時
+        {
+            setOutputText();//更新輸出幀率
+            setFinalFps();//設定最終幀率
+            setMixTo();//檢測最終幀率是否小於等於混幀
+        }
+
+        private void Speed_SelectedIndexChanged(object sender, EventArgs e)//放慢倍率發生變化時
+        {
+            //設定放慢倍率
+            switch (Speed.Text)//判斷Speed.Text內的倍率
+            {
+                case "Normal Speed":
+                    fpsRatio = 1;
+                    break;
+                case "x2 Slowmo":
+                    fpsRatio = 2;
+                    break;
+                case "x3 Slowmo":
+                    fpsRatio = 3;
+                    break;
+                case "x4 Slowmo":
+                    fpsRatio = 4;
+                    break;
+                case "x5 Slowmo":
+                    fpsRatio = 5;
+                    break;
+                case "x6 Slowmo":
+                    fpsRatio = 6;
+                    break;
+                case "x7 Slowmo":
+                    fpsRatio = 7;
+                    break;
+                case "x8 Slowmo":
+                    fpsRatio = 8;
+                    break;
+                case "x9 Slowmo":
+                    fpsRatio = 9;
+                    break;
+                case "x10 Slowmo":
+                    fpsRatio = 10;
+                    break;
+            }
+
+            setFinalFps();//設定最終幀率
+            setMixTo();//檢測最終幀率是否小於等於混幀
+        }
+
+        private void Mix_to_SelectedIndexChanged(object sender, EventArgs e)//混幀發生變化時
+        {
+            //轉換Mix_to
+            switch (Mix_to.Text)
+            {
+                case "None":
+                    mixTo = 0;
+                    break;
+                case "24FPS":
+                    mixTo = 24;
+                    break;
+                case "30FPS":
+                    mixTo = 30;
+                    break;
+                case "60FPS":
+                    mixTo = 60;
+                    break;
+            }
+
+            setMixTo();//檢測最終幀率是否小於等於混幀
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Process[] processes = Process.GetProcessesByName("ifrnet-ncnn-vulkan");
+            foreach (Process process in processes)
+            {
+                process.Kill();
+            }
         }
     }
 }
