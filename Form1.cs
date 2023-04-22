@@ -31,7 +31,6 @@ namespace IFRnet
         float pngNum = 0;//目標幀數
         bool state = false;//開始狀態
         string stageState = "";//階段狀態
-        int ifrnetStage = 1;//補幀階段
         int frequency = 1;//補幀次數
         int stateTime = 0;//開始時間
         int stageTime = 0;//補幀開始時間
@@ -40,7 +39,7 @@ namespace IFRnet
         float videoTime = 0;//影片時間
         float finalFps = 0;//最終幀率
         int fpsRatio = 1;//FPS倍率
-        int mixTo = 0;//混幀
+        int mixTo = 1;//混幀
         string aiModeState = "GoPro";//紀錄Ai_mode狀態
 
         public Form1()
@@ -65,10 +64,7 @@ namespace IFRnet
             if (state == true)//檢測是否開始
             {
                 int elapsedTime = (Environment.TickCount - stateTime) / 1000;//拿掉毫秒
-                int timeS = elapsedTime % 60;//分離出秒
-                int timeM = elapsedTime % 3600 / 60;//分離出分
-                int timeH = elapsedTime / 3600;//分離出小時
-                Time.Text = timeH + ":" + timeM.ToString().PadLeft(2,'0') + ":" + timeS.ToString().PadLeft(2, '0');//輸出經過時間
+                Time.Text = TimeSpan.FromSeconds(elapsedTime).ToString(@"hh\:mm\:ss");//輸出經過時間
             }
 
             float num = 0;//幀數
@@ -79,25 +75,26 @@ namespace IFRnet
                 case "Out png:":
                     numTotal = frame;
                     num = nowFrame;//將及時幀數寫進num
-                    float a = (nowFrame / frame) * 100;//分離出幀數,並轉換成百分比
+                    float a = (nowFrame / numTotal) * 100;//轉換成百分比
                     Planned_speed.Text = stageState + a.ToString("0.00") + "%";//同步輸出進度到Planned_speed.Text
                     break;
                 case "IFRnet:":
-                    numTotal = pngNum / (float)Math.Pow(2, frequency - ifrnetStage);
-                    num = (float)Directory.GetFiles(path + cache[ifrnetStage]).Length;//暫存2 png數
-                    Planned_speed.Text = "IFRnet_" + ifrnetStage + ":" + ((Directory.GetFiles(path + cache[ifrnetStage]).Length / (pngNum / Math.Pow(2, frequency - ifrnetStage))) * 100).ToString("0.00") + "%";//輸出百分比到Planned_speed.Text
+                    numTotal = pngNum;
+                    num = nowFrame;//總補幀數
+                    float b = (nowFrame / numTotal) * 100;//轉換成百分比
+                    Planned_speed.Text = stageState + b.ToString("0.00") + "%";//輸出百分比到Planned_speed.Text
                     break;
                 case "audio:":
                     numTotal = videoTime * fpsRatio;
                     num = nowFrame * frameRate;//將及時幀數寫進num
-                    float c = (nowFrame / (videoTime * fpsRatio)) * 100;//分離出時間,並轉換成百分比
+                    float c = (nowFrame / numTotal) * 100;//分離出時間,並轉換成百分比
                     Planned_speed.Text = stageState + c.ToString("0.00") + "%";//同步輸出進度到Planned_speed.Text
                     break;
                 case "Out video:":
-                    numTotal = pngNum;
+                    numTotal = pngNum * (mixTo / finalFps);
                     num = nowFrame;//將及時幀數寫進num
-                    float b = (nowFrame / pngNum) * 100;//分離出幀數,並轉換成百分比
-                    Planned_speed.Text = stageState + b.ToString("0.00") + "%";//同步輸出進度到Planned_speed.Text
+                    float d = (nowFrame / numTotal) * 100;//轉換成百分比
+                    Planned_speed.Text = stageState + d.ToString("0.00") + "%";//同步輸出進度到Planned_speed.Text
                     break;
                 default:
                     Planned_speed.Text = stageState;
@@ -247,8 +244,14 @@ namespace IFRnet
                 else
                     numFrame = " -n " + pngNum;
 
+                //調整係數
+                float coefficient = 0;
+                for (int i = 1; i <= frequency; i++)
+                    coefficient += pngNum / (float)Math.Pow(2, frequency - i);
+                coefficient = pngNum / coefficient;
+
                 //開始補幀
-                for (ifrnetStage = 1; ifrnetStage <= frequency; ifrnetStage++)
+                for (int i = 1; i <= frequency; i++)
                 {
                     Process IFRnet = new Process();
 
@@ -256,12 +259,19 @@ namespace IFRnet
                     IFRnet.StartInfo.CreateNoWindow = true;//不顯示視窗
 
                     IFRnet.StartInfo.FileName = path + ifrnet;//設定ifrnet-ncnn-vulkan.exe路徑
-                    IFRnet.StartInfo.Arguments = "-m " + aiModeText + numFrame + gpuLevel + tta + uhd + " -i " + path + cache[ifrnetStage - 1] + " -o " + path + cache[ifrnetStage];//設定輸入輸出參數
+                    IFRnet.StartInfo.Arguments = "-m " + aiModeText + numFrame + gpuLevel + tta + uhd + " -i " + path + cache[i - 1] + " -o " + path + cache[i];//設定輸入輸出參數
                     IFRnet.Start();//啟動
 
-                    while (Directory.GetFiles(path + cache[ifrnetStage]).Length != pngNum / Math.Pow(2, frequency - ifrnetStage)) //檢測暫存ifrnetStage png數是否等於目標幀數
+                    while (Directory.GetFiles(path + cache[i]).Length != pngNum / Math.Pow(2, frequency - i)) //檢測暫存ifrnetStage png數是否等於目標幀數
                     {
-                        log.Invoke((Action)(() => log.Text += "\r\nframe=" + Directory.GetFiles(path + cache[ifrnetStage]).Length + "/" + pngNum / Math.Pow(2, frequency - ifrnetStage)));//輸出當前幀數到log.Text
+                        nowFrame = Directory.GetFiles(path + cache[i]).Length;
+
+                        for (int o = 1; o <= i -1; o++)
+                            nowFrame += pngNum / (float)Math.Pow(2, i - o);
+
+                        nowFrame *= coefficient;//乘上調整係數
+
+                        log.Invoke((Action)(() => log.Text += "\r\nframe=" + (int)nowFrame + "/" + pngNum));//輸出當前幀數到log.Text
                         Thread.Sleep(1000);
                     }
 
@@ -317,6 +327,7 @@ namespace IFRnet
                 //處理音訊
                 string audioParameter = "";//音訊參數
                 bool checkAudio = false;
+                FileInfo fileSize = new FileInfo(path + _cache + "audio" + audio);
                 if (Audio_switch.Checked)//檢測是否啟用音訊
                 {
                     //從影片分離音訊檔
@@ -340,7 +351,7 @@ namespace IFRnet
                     FFmpeg_audio.Close();//關閉
 
                     checkAudio = File.Exists(path + _cache + "audio" + audio);//檢查音訊檔
-                    if (checkAudio)//檢測是否分離出音訊檔
+                    if (checkAudio && fileSize.Length != 0)//檢測是否分離出音訊檔
                     {
                         string audioName = "";
                         if (speedText == "Normal Speed")
@@ -523,6 +534,23 @@ namespace IFRnet
 
         private void setMixTo()
         {
+            //轉換Mix_to
+            switch (Mix_to.Text)
+            {
+                case "None":
+                    mixTo = (int)finalFps;
+                    break;
+                case "24FPS":
+                    mixTo = 24;
+                    break;
+                case "30FPS":
+                    mixTo = 30;
+                    break;
+                case "60FPS":
+                    mixTo = 60;
+                    break;
+            }
+
             //檢測最終幀率是否小於等於混幀
             if (Mix_to.Text != "None" && finalFps == mixTo && finalFps != 0)
             {
@@ -639,23 +667,6 @@ namespace IFRnet
 
         private void Mix_to_SelectedIndexChanged(object sender, EventArgs e)//混幀發生變化時
         {
-            //轉換Mix_to
-            switch (Mix_to.Text)
-            {
-                case "None":
-                    mixTo = 0;
-                    break;
-                case "24FPS":
-                    mixTo = 24;
-                    break;
-                case "30FPS":
-                    mixTo = 30;
-                    break;
-                case "60FPS":
-                    mixTo = 60;
-                    break;
-            }
-
             setMixTo();//檢測最終幀率是否小於等於混幀
         }
 
